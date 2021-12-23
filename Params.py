@@ -5,8 +5,9 @@ class ADMMParam:
     ROUNDUP = 2  # 结果四舍五入保留的位数
     E_REL = 0.00002  # ADMM收敛条件的两个参数
     E_ABS = 0.00002
-    LAMBDA = 0.17
+    LAMBDA = 0.3
     BETA = 5
+    RHO = 1
 
 
 class StockInfo:

@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from BaseGraphicalLasso import BaseGraphicalLasso
 from DataHandler import DataHandler
 import penalty_functions as pf
@@ -85,6 +88,13 @@ class ParallelTVGL(BaseGraphicalLasso):
                 if self.iteration % 500 == 0 or self.iteration == 1:
                     s_time = time.time()
                 if self.iteration > 0:
+                    ##这个是原来的收敛判断条件，把它换成了ADMM的标准收敛判断
+                    # fro_norm = 0
+                    # for i in range(self.blocks):
+                    #     dif = self.thetas[i] - thetas_pre[i]
+                    #     fro_norm += np.linalg.norm(dif)
+                    # if fro_norm < self.e:
+                    #     stopping_criteria = True
                     info = self.check_Convergence()
                     stopping_criteria = info[0]
                     if(self.iteration % 500 ==0 ):
@@ -99,7 +109,7 @@ class ParallelTVGL(BaseGraphicalLasso):
                 self.pre_u1s = copy.deepcopy(self.u1s)
                 self.pre_u2s = copy.deepcopy(self.u2s)
 
-        self.run_time = "{0:.3g}".format(time.time() - start_time)
+        self.time_span = "{0:.3g}".format(time.time() - start_time)
         self.final_tuning(stopping_criteria, max_iter)
 
 
@@ -158,6 +168,9 @@ def u_update(theta, u0, z0, u2, z2, u1, z1, u1_p, theta_p, z1_p):
     return [new_u0, new_u1, new_u2]
 
 
+
+
+
 if __name__ == "__main__" :
 
     # Input parameters from command line:
@@ -190,13 +203,13 @@ if __name__ == "__main__" :
     # beta = float(sys.argv[5])
     filename = None
     penalty_function = "element_wise"
-    blocks = 13
-    lambd = 0.17
+    blocks = 15
+    lambd = 0.3
     beta = 5
-    samplePerStep = 7
+    samplePerStep = 6
     dimension = 6
     real_data = True
-    time_set = timing_set(101, samplePerStep, 3, samplePerStep, 10)
+    time_set = timing_set(101, samplePerStep, 3, samplePerStep, 12)
     stock_list = [2, 321, 30, 241, 48, 180]
 
 
@@ -205,8 +218,6 @@ if __name__ == "__main__" :
     solver = ParallelTVGL(filename=filename,
                         penalty_function=penalty_function,
                         blocks=blocks,
-                        lambd=lambd,
-                        beta=beta,
                         samplePerStep=samplePerStep,
                         dimension=dimension,
                         time_set=time_set,
@@ -232,8 +243,14 @@ if __name__ == "__main__" :
         print(solver.thetas[10][j, :])
     company_list = get_company_list(stock_list)
     company_list_list = list(company_list)
-    save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list, './P_theta_exact_number.png')
-    save_matrix_plot(solver.thetas, time_set, company_list_list, './P_theta.png')
+    time_param = [101, samplePerStep,  3, samplePerStep, 12]
+    log_path = get_log_path(stock_list, time_param, samplePerStep, penalty_function, time_set)
+    if not Path(log_path).exists():
+        os.makedirs(log_path + "/")
+
+    save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list, log_path + '/P_theta_exact_number.png')
+    save_matrix_plot(solver.thetas, time_set, company_list_list, log_path + '/P_theta.png')
+    save_line_plot(solver.deviations, time_set, solver.lambd, solver.beta, solver.time_span, log_path + '/line.png', samplePerStep, penalty_function)
     print("\nTemporal deviations: ")
     # solver.temporal_deviations()
     print(solver.deviations)
@@ -258,6 +275,6 @@ if __name__ == "__main__" :
     #     datahandler.write_network_results(filename, solver)
 
     """ Running times """
-    print("\nAlgorithm run time: %s seconds" % (solver.run_time))
+    print("\nAlgorithm run time: %s seconds" % (solver.time_span))
     print("Execution time: %s seconds" % (time.time() - start_time))
 

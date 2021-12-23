@@ -225,13 +225,13 @@ if __name__ == "__main__" :
     # beta = float(sys.argv[5])
     filename = None
     penalty_function = "element_wise"
-    blocks = 13
+    blocks = 15
     lambd = 0.17
     beta = 5
     samplePerStep = 7
     dimension = 6
     real_data = True
-    time_set = timing_set(101, samplePerStep, 3, samplePerStep, 10)
+    time_set = timing_set(101, samplePerStep, 3, samplePerStep, 12)
     stock_list = [2, 321, 30, 241, 48, 180]
 
 
@@ -240,8 +240,6 @@ if __name__ == "__main__" :
     solver = SerialTVGL(filename=filename,
                         penalty_function=penalty_function,
                         blocks=blocks,
-                        lambd=lambd,
-                        beta=beta,
                         samplePerStep=samplePerStep,
                         dimension=dimension,
                         time_set=time_set,
@@ -269,6 +267,8 @@ if __name__ == "__main__" :
     company_list_list = list(company_list)
     save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list, './theta_exact_number.png')
     save_matrix_plot(solver.thetas, time_set, company_list_list, './theta.png')
+    save_line_plot(solver.deviations, time_set, solver.lambd, beta, solver.time_span,'./line.png',
+                   samplePerStep, penalty_function)
     print("\nTemporal deviations: ")
     # solver.temporal_deviations()
     print(solver.deviations)

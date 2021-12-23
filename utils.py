@@ -1,4 +1,7 @@
+from datetime import datetime
+
 import numpy as np
+import matplotlib.pylab as pl
 
 COR = ['A', 'AA', 'AAPL', 'ABC', 'ABT', 'ACE', 'ACS', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES',
        'AET', 'AFL', 'AGN', 'AIG', 'AIV', 'AIZ', 'AKAM', 'AKS', 'ALL', 'ALTR', 'AMAT', 'AMD', 'AMGN', 'AMP', 'AMT',
@@ -58,7 +61,6 @@ def timing_set(center, samplesPerStep_left, count_left, samplesPerStep_right, co
 
 def save_matrix_plot(theta_est_list, time_set, company_list_list, path):
     TIME_MAP = get_time_map()
-    import matplotlib.pylab as pl
     row_num = np.ceil(len(time_set) / 5.0)
     fig = pl.figure(figsize=(20, 4.5 * row_num))
     for i in range(len(time_set)):
@@ -82,7 +84,6 @@ def save_matrix_plot(theta_est_list, time_set, company_list_list, path):
 
 def save_matrix_plot_exact_number(theta_est_list, time_set, company_list_list, path):
     TIME_MAP = get_time_map()
-    import matplotlib.pylab as pl
     row_num = np.ceil(len(time_set) / 5.0)
     fig = pl.figure(figsize=(20, 4.5 * row_num))
     for i in range(len(time_set)):
@@ -129,8 +130,6 @@ def get_time_map() -> object:
 def get_company_list(stock_list):
     return map(lambda x : COR[x], stock_list)
 
-
-
 def genEmpCov(samples, useKnownMean=False, m=0):
     size, samplesPerStep = samples.shape
     if useKnownMean == False:
@@ -141,3 +140,48 @@ def genEmpCov(samples, useKnownMean=False, m=0):
         empCov = empCov + np.outer(sample - m, sample - m)
     empCov = empCov / samplesPerStep
     return empCov
+
+def get_time_list(time_set, short=False):
+    TIME_MAP = get_time_map()
+    result = []
+    for t in time_set:
+        if short:
+            result.append(TIME_MAP[t[0]][5:] + '~' + TIME_MAP[t[1]][5:])
+        else:
+            result.append(TIME_MAP[t[0]] + '~' + TIME_MAP[t[1]])
+    return result
+
+
+def save_line_plot(temp_dev_list, time_set, alpha, beta, time_span, path, time_step, penalty):
+    TIME_MAP = get_time_map()
+    pl.figure(figsize = (1.5 * len(temp_dev_list), 4))
+    pl.plot(temp_dev_list[0:], '-o')
+    pl.ylabel(r'$\|\Theta_i - \Theta_{i-1}\|_{F}$')
+    pl.xlabel('Timestamp')
+    pl.yscale('log')
+    pl.text(0.05, 0.5, 'Alpha=' + str(alpha))
+    pl.text(0.05, 0.3, 'Beta=' + str(beta))
+    pl.text(0.05, 0.1, "Time passed: {}s".format(time_span))
+    pl.text(0.05, 0.03, 'samplePerStep=' + str(time_step))
+    pl.title('From ' + TIME_MAP[time_set[0][0]] + ' to ' + TIME_MAP[time_set[-1][1]] + " " + penalty)
+    ax = pl.gca()
+    ax.set_yticks([10**(-3), 10**(-2), 10**(-1), 1])
+    # angle = np.linspace(0, len(temp_dev_list) - 1, len(temp_dev_list))
+    a = get_time_list(time_set, True)[0:]
+    ax.set_xticks(np.linspace(0, len(temp_dev_list) - 1, len(temp_dev_list)))
+    ax.set_xticklabels(get_time_list(time_set, True)[:-1])
+    ax.set_yticklabels([r'$10^{-3}$', r'$10^{-2}$', r'$10^{-1}$', r'$10^{0}$'])
+    pl.savefig(path, dpi=300, bbox_inches='tight')
+
+
+def get_dir_name(stock_list, time_param, time_set):
+    TIME_MAP = get_time_map()
+    stocks = get_company_list(stock_list)
+    stockstr = ','.join(stocks)
+    time_param = list(time_param)
+    time_param_str_list = [str(i) for i in time_param]
+    return '[' + stockstr + ']' + TIME_MAP[time_set[0][0]] + '_' + TIME_MAP[time_set[-1][-1]] + '_' + '_'.join(time_param_str_list)
+
+def get_log_path(stock_list, time_param,time_step, penalty, time_set):
+
+    return "./result/" + 'PD_result{}_time_step{}_{}/'.format(datetime.now().strftime('%Y-%m-%d'), time_step, penalty) + get_dir_name(stock_list, time_param, time_set)

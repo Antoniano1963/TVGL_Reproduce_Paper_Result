@@ -16,9 +16,8 @@ class BaseGraphicalLasso(object):
     np.set_printoptions(precision=3)
 
     """ Initialize attributes, read data """
-    def __init__(self, filename, blocks, lambd, beta,
-                 processes, samplePerStep, dimension, time_set, stock_list, read_data_function, penalty_function="group_lasso",
-                 datecolumn=True):
+    def __init__(self, filename, blocks, processes, samplePerStep, dimension, time_set, stock_list,
+                 read_data_function, penalty_function="group_lasso",datecolumn=True):
         self.datecolumn = datecolumn
         self.processes = processes
         self.blocks = blocks
@@ -57,7 +56,8 @@ class BaseGraphicalLasso(object):
         self.roundup = ADMMParam.ROUNDUP # 结果四舍五入保留的位数
         self.e_rel = ADMMParam.E_REL # ADMM收敛条件的两个参数
         self.e_abs = ADMMParam.E_ABS
-        self.rho = 1
+        self.rho = ADMMParam.RHO
+        self.time_span = None
 
 
     """调用传入的读入数据函数以获取经验协方差"""
@@ -170,6 +170,7 @@ class BaseGraphicalLasso(object):
             self.pre_u2s = copy.deepcopy(self.u2s)
 
         self.run_time = "{0:.3g}".format(time.time() - start_time)
+        self.time_span = time.time() - start_time
         self.final_tuning(stopping_criteria, max_iter)
 
     def theta_update(self):
@@ -252,7 +253,7 @@ class BaseGraphicalLasso(object):
         closes possible multiprocesses. """
     def final_tuning(self, stopping_criteria, max_iter):
         self.temporal_deviations()
-        self.thetas = [np.round(theta, self.roundup) for theta in self.thetas]
+        self.thetas = [np.abs(np.round(theta, self.roundup)) for theta in self.thetas]
         self.terminate_processes()
         if stopping_criteria:
             print("\nIterations to complete: %s" % self.iteration)
@@ -281,8 +282,8 @@ class BaseGraphicalLasso(object):
         self.deviations = np.zeros(self.blocks - 1)
         for i in range(0, self.blocks - 1):
             dif = self.thetas[i+1] - self.thetas[i]
-            np.fill_diagonal(dif, 0)
-            self.deviations[i] = np.linalg.norm(dif)
+            # np.fill_diagonal(dif, 0)
+            self.deviations[i] = np.linalg.norm(dif, 'fro')
         try:
             self.norm_deviations = self.deviations/max(self.deviations)
             self.dev_ratio = float(max(self.deviations))/float(
