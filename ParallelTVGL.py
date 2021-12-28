@@ -202,10 +202,8 @@ if __name__ == "__main__" :
     # lambd = float(sys.argv[4])
     # beta = float(sys.argv[5])
     filename = None
-    penalty_function = "element_wise"
+    penalty_function = "perturbed_node"
     blocks = 15
-    lambd = 0.3
-    beta = 5
     samplePerStep = 6
     dimension = 6
     real_data = True
@@ -248,8 +246,10 @@ if __name__ == "__main__" :
     if not Path(log_path).exists():
         os.makedirs(log_path + "/")
 
-    save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list, log_path + '/P_theta_exact_number.png')
-    save_matrix_plot(solver.thetas, time_set, company_list_list, log_path + '/P_theta.png')
+    save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list,
+                                  log_path + '/P_theta_exact_number_{}_{}.png'.format(solver.lambd, solver.beta))
+    save_matrix_plot(solver.thetas, time_set, company_list_list,
+                     log_path + '/P_theta_{}_{}.png'.format(solver.lambd, solver.beta))
     save_line_plot(solver.deviations, time_set, solver.lambd, solver.beta, solver.time_span, log_path + '/line.png', samplePerStep, penalty_function)
     print("\nTemporal deviations: ")
     # solver.temporal_deviations()

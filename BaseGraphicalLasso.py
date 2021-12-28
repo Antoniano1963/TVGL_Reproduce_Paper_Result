@@ -17,7 +17,7 @@ class BaseGraphicalLasso(object):
 
     """ Initialize attributes, read data """
     def __init__(self, filename, blocks, processes, samplePerStep, dimension, time_set, stock_list,
-                 read_data_function, penalty_function="group_lasso",datecolumn=True):
+                 read_data_function, penalty_function="group_lasso",datecolumn=True, newADMMParam=ADMMParam):
         self.datecolumn = datecolumn
         self.processes = processes
         self.blocks = blocks
@@ -35,8 +35,8 @@ class BaseGraphicalLasso(object):
         self.getStocks()
         self.rho = self.get_rho()
         self.max_step = 0.1
-        self.lambd = ADMMParam.LAMBDA
-        self.beta = ADMMParam.BETA
+        self.lambd = newADMMParam.LAMBDA
+        self.beta = newADMMParam.BETA
         self.thetas = [np.zeros((self.dimension, self.dimension))] * self.blocks
         self.z0s = [np.zeros((self.dimension, self.dimension))] * self.blocks
         self.z1s = [np.zeros((self.dimension, self.dimension))] * self.blocks
@@ -52,11 +52,11 @@ class BaseGraphicalLasso(object):
         self.pre_u1s = [np.zeros((self.dimension, self.dimension))] * self.blocks
         self.pre_u2s = [np.zeros((self.dimension, self.dimension))] * self.blocks
         self.eta = float(self.obs)/float(3*self.rho)
-        self.e = ADMMParam.E
-        self.roundup = ADMMParam.ROUNDUP # 结果四舍五入保留的位数
-        self.e_rel = ADMMParam.E_REL # ADMM收敛条件的两个参数
-        self.e_abs = ADMMParam.E_ABS
-        self.rho = ADMMParam.RHO
+        self.e = newADMMParam.E
+        self.roundup = newADMMParam.ROUNDUP # 结果四舍五入保留的位数
+        self.e_rel = newADMMParam.E_REL # ADMM收敛条件的两个参数
+        self.e_abs = newADMMParam.E_ABS
+        self.rho = newADMMParam.RHO
         self.time_span = None
 
 
@@ -91,6 +91,7 @@ class BaseGraphicalLasso(object):
         for i in range(samplesPerStep):
             sample = samples[:, i]
             empCov = empCov + np.outer(sample - m, sample - m)
+            # empCov = empCov + np.outer(sample, sample)
         empCov = empCov / samplesPerStep
         return empCov
 
