@@ -16,15 +16,17 @@ class BaseGraphicalLasso(object):
     np.set_printoptions(precision=3)
 
     """ Initialize attributes, read data """
-    def __init__(self, filename, blocks, processes, samplePerStep, dimension, time_set, stock_list,
-                 read_data_function, penalty_function="group_lasso",datecolumn=True, newADMMParam=ADMMParam):
+    def __init__(self, blocks, processes, sampleperstep, dimension, time_set, stock_list,
+                 read_data_function, func_args=None, penalty_function="group_lasso",
+                 datecolumn=True, newADMMParam=ADMMParam):
         self.datecolumn = datecolumn
         self.processes = processes
         self.blocks = blocks
-        self.samplePerStep = samplePerStep
+        self.samplePerStep = sampleperstep
         self.penalty_function = penalty_function
         self.dimension = dimension
         self.stock_list = stock_list
+        self.func_args = func_args
         self.emp_cov_mat = [0] * self.blocks
         self.real_thetas = [0] * self.blocks
         self.time_set = time_set
@@ -32,7 +34,7 @@ class BaseGraphicalLasso(object):
             self.blockdates = [0] * self.blocks
         self.obs = self.dimension
         self.read_data_function = read_data_function
-        self.getStocks()
+        self.get_stocks()
         self.rho = self.get_rho()
         self.max_step = 0.1
         self.lambd = newADMMParam.LAMBDA
@@ -59,16 +61,14 @@ class BaseGraphicalLasso(object):
         self.rho = newADMMParam.RHO
         self.time_span = None
 
-
     """调用传入的读入数据函数以获取经验协方差"""
-
-    def read_data(self, *args, **kwargs):
-        empCov_set = self.read_data_function(*args, *kwargs)
+    def read_data(self):
+        empCov_set = self.read_data_function(*self.func_args)
         for i in range(len(empCov_set)):
             self.emp_cov_mat[i] = empCov_set[i]
 
     """读取股票数据"""
-    def getStocks(self):
+    def get_stocks(self):
         timesteps = len(self.time_set)
         sample_data_set = []
         empCov_set = []
@@ -78,12 +78,12 @@ class BaseGraphicalLasso(object):
             time_interval = self.time_set[i]
             sample_data = stock_data[time_interval[0]:time_interval[1] + 1, self.stock_list].T
             sample_data_set.append(sample_data)
-            empCov_set.append(self.genEmpCov(sample_data))
+            empCov_set.append(self.gen_emp_cov(sample_data))
         for i in range(len(empCov_set)):
             self.emp_cov_mat[i] = empCov_set[i]
         return size, timesteps, sample_data_set, empCov_set
 
-    def genEmpCov(self, samples, useKnownMean=False, m=0):
+    def gen_emp_cov(self, samples, useKnownMean=False, m=0):
         size, samplesPerStep = samples.shape
         if useKnownMean == False:
             m = np.mean(samples, axis=1)
@@ -253,7 +253,7 @@ class BaseGraphicalLasso(object):
     """ Performs final tuning for the converged thetas,
         closes possible multiprocesses. """
     def final_tuning(self, stopping_criteria, max_iter):
-        self.temporal_deviations()
+        self.__temporal_deviations()
         self.thetas = [np.abs(np.round(theta, self.roundup)) for theta in self.thetas]
         self.terminate_processes()
         if stopping_criteria:
@@ -279,18 +279,20 @@ class BaseGraphicalLasso(object):
     """ Computes the Temporal Deviations between neighboring
         thetas, both absolute and normalized values. 
         TD Value"""
-    def temporal_deviations(self):
-        self.deviations = np.zeros(self.blocks - 1)
+    def __temporal_deviations(self):
+        self.deviations_value = np.zeros(self.blocks - 1)
+        self.deviations = []
         for i in range(0, self.blocks - 1):
             dif = self.thetas[i+1] - self.thetas[i]
             # np.fill_diagonal(dif, 0)
-            self.deviations[i] = np.linalg.norm(dif, 'fro')
+            self.deviations_value[i] = np.linalg.norm(dif, 'fro')
+            self.deviations.append(np.abs(dif))
         try:
-            self.norm_deviations = self.deviations/max(self.deviations)
-            self.dev_ratio = float(max(self.deviations))/float(
-                np.mean(self.deviations))
+            self.norm_deviations = self.deviations_value / max(self.deviations_value)
+            self.dev_ratio = float(max(self.deviations_value)) / float(
+                np.mean(self.deviations_value))
         except ZeroDivisionError:
-            self.norm_deviations = self.deviations
+            self.norm_deviations = self.deviations_value
             self.dev_ratio = 0
 
     """ Computes the measures of correct edges in thetas,

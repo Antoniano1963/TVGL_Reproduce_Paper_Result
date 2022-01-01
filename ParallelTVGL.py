@@ -250,10 +250,10 @@ if __name__ == "__main__" :
                                   log_path + '/P_theta_exact_number_{}_{}.png'.format(solver.lambd, solver.beta))
     save_matrix_plot(solver.thetas, time_set, company_list_list,
                      log_path + '/P_theta_{}_{}.png'.format(solver.lambd, solver.beta))
-    save_line_plot(solver.deviations, time_set, solver.lambd, solver.beta, solver.time_span, log_path + '/line.png', samplePerStep, penalty_function)
+    save_line_plot(solver.deviations_value, time_set, solver.lambd, solver.beta, solver.time_span, log_path + '/line.png', samplePerStep, penalty_function)
     print("\nTemporal deviations: ")
     # solver.temporal_deviations()
-    print(solver.deviations)
+    print(solver.deviations_value)
     print("Normalized Temporal deviations: ")
     print(solver.norm_deviations)
     try:

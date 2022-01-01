@@ -267,11 +267,11 @@ if __name__ == "__main__" :
     company_list_list = list(company_list)
     save_matrix_plot_exact_number(solver.thetas, time_set, company_list_list, './theta_exact_number.png')
     save_matrix_plot(solver.thetas, time_set, company_list_list, './theta.png')
-    save_line_plot(solver.deviations, time_set, solver.lambd, beta, solver.time_span,'./line.png',
+    save_line_plot(solver.deviations_value, time_set, solver.lambd, beta, solver.time_span, './line.png',
                    samplePerStep, penalty_function)
     print("\nTemporal deviations: ")
     # solver.temporal_deviations()
-    print(solver.deviations)
+    print(solver.deviations_value)
     print("Normalized Temporal deviations: ")
     print(solver.norm_deviations)
     try:

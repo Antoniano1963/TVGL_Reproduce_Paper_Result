@@ -87,12 +87,6 @@ def save_matrix_plot_exact_number(theta_est_list, time_set, company_list_list, p
     row_num = np.ceil(len(time_set) / 5.0)
     fig = pl.figure(figsize=(20, 4.5 * row_num))
     for i in range(len(time_set)):
-        # theta = theta_est_list[i]
-        # row, col = theta.shape
-        # for i in range(row):
-        #     for j in range(col):
-        #         theta[i, j] = abs(theta[i, j])
-        # theta[theta != 0] = abs(1)
         abs_theta = np.abs(theta_est_list[i])
         row, col = abs_theta.shape
         # abs_theta[abs_theta == 0] = 1
@@ -119,6 +113,33 @@ def save_matrix_plot_exact_number(theta_est_list, time_set, company_list_list, p
     pl.savefig(path, dpi=300, bbox_inches='tight')
 
 
+def save_TD_matrix(TD_matrix, time_set, company_list_list, path):
+    TIME_MAP = get_time_map()
+    row_num = np.ceil(len(time_set) / 5.0)
+    fig = pl.figure(figsize=(20, 4.5 * row_num))
+    for i in range(len(time_set)-1):
+        abs_theta = np.abs(TD_matrix[i])
+        row, col = abs_theta.shape
+        for j in range(row):
+            abs_theta[j, j] = 0.01
+        # abs_theta[abs_theta == 0] = -0.1
+        # abs_theta = abs_theta * 10
+        time = TIME_MAP[time_set[i][0]] + '~' + TIME_MAP[time_set[i][-1]]
+        fig.add_subplot(int(row_num), 5, i + 1)
+        pl.imshow(abs_theta, cmap='PuBu', interpolation='nearest')
+        pl.title(time)
+        ax = pl.gca()
+        ticks = []
+        for j in range(len(company_list_list)):
+            ticks.append(j)
+        # ticks = [i for i in range(len(list(company_list)))]
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+        ax.set_xticklabels(company_list_list)
+        ax.set_yticklabels(company_list_list)
+    pl.savefig(path, dpi=300, bbox_inches='tight')
+
+
 def get_time_map() -> object:
     m = []
     with open('time.txt', 'r') as f:
@@ -127,8 +148,10 @@ def get_time_map() -> object:
             m.append(line[:4] + '-' + line[4:6] + '-' + line[6:])
     return m
 
+
 def get_company_list(stock_list):
     return map(lambda x : COR[x], stock_list)
+
 
 def genEmpCov(samples, useKnownMean=False, m=0):
     size, samplesPerStep = samples.shape
@@ -140,6 +163,7 @@ def genEmpCov(samples, useKnownMean=False, m=0):
         empCov = empCov + np.outer(sample - m, sample - m)
     empCov = empCov / samplesPerStep
     return empCov
+
 
 def get_time_list(time_set, short=False):
     TIME_MAP = get_time_map()
@@ -166,7 +190,6 @@ def save_line_plot(temp_dev_list, time_set, alpha, beta, time_span, path, time_s
     pl.title('From ' + TIME_MAP[time_set[0][0]] + ' to ' + TIME_MAP[time_set[-1][1]] + " " + penalty)
     ax = pl.gca()
     ax.set_yticks([10**(-3), 10**(-2), 10**(-1), 1])
-    # angle = np.linspace(0, len(temp_dev_list) - 1, len(temp_dev_list))
     a = get_time_list(time_set, True)[0:]
     ax.set_xticks(np.linspace(0, len(temp_dev_list) - 1, len(temp_dev_list)))
     ax.set_xticklabels(get_time_list(time_set, True)[:-1])
@@ -182,6 +205,8 @@ def get_dir_name(stock_list, time_param, time_set):
     time_param_str_list = [str(i) for i in time_param]
     return '[' + stockstr + ']' + TIME_MAP[time_set[0][0]] + '_' + TIME_MAP[time_set[-1][-1]] + '_' + '_'.join(time_param_str_list)
 
+
 def get_log_path(stock_list, time_param,time_step, penalty, time_set):
 
-    return "./result/" + 'PD_result{}_time_step{}_{}/'.format(datetime.now().strftime('%Y-%m-%d'), time_step, penalty) + get_dir_name(stock_list, time_param, time_set)
+    return "./result/" + 'PD_result{}_time_step{}_{}/'.format(
+        datetime.now().strftime('%Y-%m-%d'), time_step, penalty) + get_dir_name(stock_list, time_param, time_set)

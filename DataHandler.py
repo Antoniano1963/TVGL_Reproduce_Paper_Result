@@ -139,7 +139,7 @@ class DataHandler(object):
                 f.write("Temporal deviations ratio (max/mean), %s\n"
                         % solver.dev_ratio)
             f.write("Temporal deviations ")
-            for dev in solver.deviations:
+            for dev in solver.deviations_value:
                 try:
                     f.write(",{0:.3f}".format(dev))
                 except ValueError:
@@ -157,10 +157,10 @@ class DataHandler(object):
                 f.write(solver.blockdates[k] + "\n")
                 if k > 0:
                     f.write("Dev to prev,")
-                    f.write("{0:.3f},".format(solver.deviations[k-1]))
+                    f.write("{0:.3f},".format(solver.deviations_value[k - 1]))
                 if k < solver.blocks - 1:
                     f.write("Dev to next,")
-                    f.write("{0:.3f}".format(solver.deviations[k]))
+                    f.write("{0:.3f}".format(solver.deviations_value[k]))
                 f.write("\n")
                 for feat in feats:
                     f.write("," + feat)
@@ -210,7 +210,7 @@ class DataHandler(object):
                 f.write("Temporal deviations ratio (max/mean), %s\n"
                         % solver.dev_ratio)
             f.write("Temporal deviations ")
-            for dev in solver.deviations:
+            for dev in solver.deviations_value:
                 try:
                     f.write(",{0:.3f}".format(dev))
                 except ValueError:
