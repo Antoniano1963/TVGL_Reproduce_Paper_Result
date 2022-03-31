@@ -224,11 +224,11 @@ if __name__ == "__main__" :
     # lambd = float(sys.argv[4])
     # beta = float(sys.argv[5])
     filename = None
-    penalty_function = "element_wise"
+    penalty_function = "perturbed_node"
     blocks = 15
-    lambd = 0.17
-    beta = 5
-    samplePerStep = 7
+    lambd = 0.3
+    beta = 10
+    samplePerStep = 6
     dimension = 6
     real_data = True
     time_set = timing_set(101, samplePerStep, 3, samplePerStep, 12)
@@ -237,10 +237,9 @@ if __name__ == "__main__" :
 
     """ Create solver instance """
     print("\nReading file: %s\n" % filename)
-    solver = SerialTVGL(filename=filename,
-                        penalty_function=penalty_function,
+    solver = SerialTVGL(penalty_function=penalty_function,
                         blocks=blocks,
-                        samplePerStep=samplePerStep,
+                        sampleperstep=samplePerStep,
                         dimension=dimension,
                         time_set=time_set,
                         stock_list=stock_list,
