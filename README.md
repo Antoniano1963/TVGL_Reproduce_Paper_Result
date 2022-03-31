@@ -1,4 +1,4 @@
-## TVGL 
+## TVGL  
 
 An implement of TVGL in Python3 with numpy.  For implementation details, refer to the paper, available at: http://stanford.edu/~hallac/TVGL.pdf.
 
